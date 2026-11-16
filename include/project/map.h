@@ -29,6 +29,6 @@ public:
 private:
     std::vector<KeyValuePair> entries_;
 
+    std::size_t lowerBoundIndex(const std::string& key) const;
     std::size_t findIndex(const std::string& key) const;
-    void sortEntries();
 };

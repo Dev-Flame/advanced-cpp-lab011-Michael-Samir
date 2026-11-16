@@ -13,52 +13,65 @@ std::size_t Map::size() const noexcept {
     return entries_.size();
 }
 
-std::size_t Map::findIndex(const std::string& key) const {
-    for (std::size_t i = 0; i < entries_.size(); ++i) {
-        if (entries_[i].key == key) {
-            return i;
-        }
-    }
-    return entries_.size();
+std::size_t Map::lowerBoundIndex(const std::string& key) const {
+    // Sorted entries let us find a key or its insertion position in O(log n).
+    const auto position = std::lower_bound(entries_.begin(), entries_.end(), key,
+        [](const KeyValuePair& entry, const std::string& target) {
+            return entry.key < target;
+        });
+    return static_cast<std::size_t>(position - entries_.begin());
 }
 
-void Map::sortEntries() {
-    std::sort(entries_.begin(), entries_.end(),
-              [](const KeyValuePair& a, const KeyValuePair& b) {
-                  return a.key < b.key;
-              });
+std::size_t Map::findIndex(const std::string& key) const {
+    const std::size_t index = lowerBoundIndex(key);
+    return index < size() && entries_[index].key == key ? index : size();
 }
 
 bool Map::contains(const std::string& key) const {
-    (void)key;
-    throw std::logic_error("Student implementation required: contains");
+    return findIndex(key) != size();
 }
 
 bool Map::insert(const std::string& key, int value) {
-    (void)key;
-    (void)value;
-    throw std::logic_error("Student implementation required: insert");
+    const std::size_t index = lowerBoundIndex(key);
+    if (index < size() && entries_[index].key == key) {
+        return false;
+    }
+    entries_.insert(entries_.begin() + index, KeyValuePair{key, value});
+    return true;
 }
 
 bool Map::update(const std::string& key, int newValue) {
-    (void)key;
-    (void)newValue;
-    throw std::logic_error("Student implementation required: update");
+    const std::size_t index = findIndex(key);
+    if (index == size()) {
+        return false;
+    }
+    entries_[index].value = newValue;
+    return true;
 }
 
 bool Map::erase(const std::string& key) {
-    (void)key;
-    throw std::logic_error("Student implementation required: erase");
+    const std::size_t index = findIndex(key);
+    if (index == size()) {
+        return false;
+    }
+    entries_.erase(entries_.begin() + index);
+    return true;
 }
 
 int Map::at(const std::string& key) const {
-    (void)key;
-    throw std::logic_error("Student implementation required: at");
+    const std::size_t index = findIndex(key);
+    if (index == size()) {
+        throw std::out_of_range("Key not found");
+    }
+    return entries_[index].value;
 }
 
 int& Map::at(const std::string& key) {
-    (void)key;
-    throw std::logic_error("Student implementation required: at non-const");
+    const std::size_t index = findIndex(key);
+    if (index == size()) {
+        throw std::out_of_range("Key not found");
+    }
+    return entries_[index].value;
 }
 
 std::vector<std::string> Map::keys() const {

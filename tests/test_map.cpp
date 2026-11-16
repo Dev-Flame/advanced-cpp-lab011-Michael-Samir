@@ -112,3 +112,28 @@ TEST_CASE("Map supports negative and zero values") {
     REQUIRE(map.at("neg") == -5);
     REQUIRE(map.at("positive") == 25);
 }
+
+TEST_CASE("Map keeps keys and values aligned in key order") {
+    Map map;
+    REQUIRE(map.insert("zebra", 9));
+    REQUIRE(map.insert("apple", 1));
+    REQUIRE(map.insert("mango", 3));
+    REQUIRE(map.erase("mango"));
+    REQUIRE(map.insert("banana", 2));
+
+    REQUIRE(map.keys() == std::vector<std::string>{"apple", "banana", "zebra"});
+    REQUIRE(map.values() == std::vector<int>{1, 2, 9});
+}
+
+TEST_CASE("Map mutable access updates what const access reads") {
+    Map map;
+    REQUIRE(map.insert("", 1));
+    map.at("") = 5;
+
+    const Map& view = map;
+    REQUIRE(view.at("") == 5);
+    REQUIRE_THROWS_AS(view.at("missing"), std::logic_error);
+    REQUIRE(map.erase(""));
+    REQUIRE_THROWS_AS(map.at(""), std::logic_error);
+    REQUIRE(map.empty());
+}
